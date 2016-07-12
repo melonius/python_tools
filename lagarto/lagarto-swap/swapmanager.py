@@ -47,6 +47,18 @@ from lagartocomms import LagartoProcess
 from lagartoresources import LagartoException
 from lagartoconfig import XmlLagarto
 
+#___________________________________
+#import MySQLdb
+from aDB import escribeEnBd
+from actuaVenti import actuaVenti
+#~ import conexionDB
+
+#~ from mysql.connector import errorcode
+#~ tabla10 = 'calder10'
+#~ tabla10 = 'lagarto'
+#~ tabla60 = 'calder60'
+#~ tablaLog = 'logLagarto'
+#------------------------------------
 
 class SwapManager(SwapInterface, LagartoProcess):
     """
@@ -60,8 +72,8 @@ class SwapManager(SwapInterface, LagartoProcess):
         """
         ex.display()
         ex.log()
-        
-    
+
+
     def newMoteDetected(self, mote):
         """
         New mote detected by SWAP server
@@ -115,24 +127,33 @@ class SwapManager(SwapInterface, LagartoProcess):
             return
         
         if self._print_swap == True:
-            print  "Register addr= " + str(register.getAddress()) + " id=" + str(register.id) + " changed to " + register.value.toAsciiHex()
+            print  "Register addr= " + str(register.getAddress()) + " id=" + str(register.id) + " changed to " + register.value.toAsciiHex() ,
         
         status = []
         # For every endpoint contained in this register
         for endp in register.parameters:
             strval = endp.getValueInAscii()
+            #__________________________________escribe en la base de datos
+            escribeEnBd(endp.name, endp.getRegAddress(), strval, endp.valueChanged)
+            #__________________________________aqui poner actua
+            #~ actuaVenti()
+
+
             if self.lagarto_config.publish == "always" or (self.lagarto_config.publish == "event" and endp.valueChanged):
                 if self._print_swap:
                     if endp.unit is not None:
                         strval += " " + endp.unit.name
-                    print endp.name + " in address " + str(endp.getRegAddress()) + " changed to " + strval
+                    print endp.name + " in address " + str(endp.getRegAddress()) + " changed to " + strval ,
                                
                 if endp.display:
                     endp_data = endp.dumps()
                     if endp_data is not None:
                         status.append(endp_data)
-        
-        if len(status) > 0:        
+
+
+        print
+
+        if len(status) > 0:
             self.publish_status(status)
                       
         
@@ -195,7 +216,7 @@ class SwapManager(SwapInterface, LagartoProcess):
                         endp.cmdWack(new_value)
                         # Build new JSON structure
                         status.append(endp.dumps())
-
+        print "_________estoy en set_status____", self, endpoints
         return status
     
     

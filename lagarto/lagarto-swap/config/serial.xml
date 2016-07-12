@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <serial>
-	<port>/dev/ttyUSB0</port>
+<!--	<port>/dev/ttyUSB0</port>														-->
+<!--
+	<port>/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A7025URU-if00-port0</port>		
+-->
+	<port>/dev/serial/by-id/usb-FTDI_FT231X_USB_UART_DA01498R-if00-port0</port>	      <!--nuc  -->
 	<speed>38400</speed>
 </serial>

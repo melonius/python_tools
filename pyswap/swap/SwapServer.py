@@ -358,8 +358,9 @@ class SwapServer(threading.Thread):
                                 return
                             if reg.getLength() != packet.value.getLength():
                                 return
-                            if reg.value.isEqual(packet.value):
-                                return
+
+#                            if reg.value.isEqual(packet.value):		#_________________________________________
+#                                return									#_________________________________________
 
                         # Save new register value
                         reg.setValue(packet.value)
@@ -379,7 +380,7 @@ class SwapServer(threading.Thread):
                     # Same register ID?
                     if reg.id == packet.regId:
                         # Did register's value change?
-                        if not reg.value.isEqual(packet.value):
+                        #~ if not reg.value.isEqual(packet.value):	#_________________________________________
                             # Save new register value
                             reg.setValue(packet.value)
                             # Notify register'svalue change to event handler
