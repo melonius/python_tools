@@ -50,7 +50,7 @@ from lagartoconfig import XmlLagarto
 #___________________________________
 #import MySQLdb
 from aDB import escribeEnBd
-from actuaVenti import actuaVenti
+#~ from actuaVenti import actuaVenti
 #~ import conexionDB
 
 #~ from mysql.connector import errorcode
