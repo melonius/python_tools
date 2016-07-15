@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
+from time import localtime, strftime, sleep
 import os
 import mysql.connector
-from mysql.connector import errorcode
 
-import urllib2
-import email.utils as eut
+#~ import urllib2
+#~ import email.utils as eut
 import time
-import datetime
-import commands
+#~ import datetime
+#~ import commands
 
-import MySQLdb
-from datetime import date
-from time import localtime, strftime
+#~ import MySQLdb
+#~ from mysql.connector import errorcode
+#~ from datetime import date
 
 global cnx
 global calibrado
+global time
 
 
 def getLastValue(variable):
@@ -28,7 +29,7 @@ def getLastValue(variable):
     ultimoValor = []
     try:
         cursor = cnx.cursor(dictionary=True)
-        rows_affected = cursor.execute(sql)
+        cursor.execute(sql)
         registro = cursor.fetchone()
         if registro is not None:
             ultimoValor = [registro['valor'], registro['difT']]
@@ -41,9 +42,7 @@ def getLastValue(variable):
 
 
 def hABS(temp, hr):
-    """
-    Adquiere el último valor de variable de la base de datos y la dif de tiempo
-    """
+    """ Adquiere el último valor de variable de la base de datos y la dif de tiempo """
     humABS = 216.679 * (hr / 100) * (6.116441 * pow(2.71828183, 17.27*temp / (237.3+temp))) / (temp+273.15)
     #~ humABS = hr /  100
     #~ humABS = 216.679 * (hr / 100)
@@ -51,10 +50,12 @@ def hABS(temp, hr):
 
 
 def calibra(dato, variab):
+    """return el dato de la variab calibrado, funcion de transformacion lineal de tipo y=Bx+C"""
     datoCalibrado = calibrado[variab][4] * float(dato) + calibrado[variab][5]
     return datoCalibrado
 
 def actua(comando):
+    """ envia comando al servidor web para ejecutar comando. paraHacer variable global para el mote y el endPoint"""
     if comando == 'ON':
         os.system('wget -q -O - http://localhost:8001/values/40.11.1/?value=ON')
     else:
@@ -63,6 +64,7 @@ def actua(comando):
 
 def main():
 ### 0. conecta con la BD
+    time.sleep(2)
     try:
         global cnx
         cnx = mysql.connector.connect(host="localhost", user="domolibre", passwd="domolibre", db="domolibre")
@@ -82,12 +84,12 @@ def main():
     cnx.close()
 
 
-
     #~ print h2, h2d
     #~ print t2, h2, t11, h11
 
     ### 2. calibrado y humedad absoluta
     # calibrar    negativo si hay que bajar el valor
+    #paraHacer: pasar a un fichero de configuracion
     calibrado = dict()
     calibrado['t11'] = [28, 0, 35, -0.3]
     calibrado['t2'] = [23, 0.1, 33, -0.3]
@@ -117,47 +119,35 @@ def main():
 
     minutosMax = 11
     dtmax = minutosMax*60
-    if t2d.seconds > dtmax and h2d.seconds > dtmax:
-        print t2d,' o ', h2d, ' es mayor de ',minutosMax, ' minutos'
-        f1.write( strftime("%Y-%m-%d %H:%M:%S", localtime()) + ' dif tiempos: ' + str(t2d) + '  ó ' +  str(h2d) + ' mayor que ' + str(minutosMax))
+    f1 = open('/home/mel/log/venti.log', 'a+')
+
+    if t2d.seconds > dtmax or h2d.seconds > dtmax or t11d.seconds > dtmax or h11d.seconds > dtmax:
+        print t2d,' o ', h2d, ' es mayor de ', minutosMax, ' minutos'
+        f1.write('\n')
+        f1.write( strftime("%Y-%m-%d %H:%M:%S", localtime()) + ' dif tiempos: t2d' + str(t2d) + '  ó h2d' +  str(h2d) + '  ó t11d' +  str(t11d) + '  ó h11d' +  str(h11d) + ' mayor que ' + str(minutosMax))
 
     else:
         #calibrar
-        if calibrado['t2'] and t2 !='':
-            t2= calibra(t2, 't2')
-        if calibrado['h2'] and h2 !='':
-            h2= calibra(h2, 'h2')
+        if calibrado['t2'] and t2 != '':
+            t2 = calibra(t2, 't2')
+        if calibrado['h2'] and h2 != '':
+            h2 = calibra(h2, 'h2')
 
-        h2ABS = hABS (float(t2),float(h2))
+        h2ABS = hABS(float(t2),float(h2))
         print t2, h2, h2ABS
 
-        if calibrado['t11'] and t11 !='':
-            t11= calibra(t11, 't11')
-        if calibrado['h11'] and h11 !='':
-            h11= calibra(h11, 'h11')
+        if calibrado['t11'] and t11 != '':
+            t11 = calibra(t11, 't11')
+        if calibrado['h11'] and h11 != '':
+            h11 = calibra(h11, 'h11')
 
-        h11ABS = hABS (float(t11),float(h11))
+        h11ABS = hABS(float(t11), float(h11))
         print t11, h11, h11ABS
 
-
-
-        """
-            calcula hABS
-
-            lee el estado del ventilador
-        2. decide la orden
-            si >80% y > 2gr dif y < 4º dif
-            si >80% y > 1gr dif y < 1º dif
-            si >85% y > 2gr dif y < 6º dif
-            
-        3. actua encendiendo o apagando
-            os.system(“uname -a”)
-        """
         # actua
-        f1=open('/home/mel/log/venti.log', 'a+')
         #~ f1.write(datetime.datetime.now().time())
-        f1.write( '\n')
-        f1.write( strftime("%Y-%m-%d %H:%M:%S", localtime()) + ' ' + '{:05.2f}'.format(h11) + ' ' +  '{:05.2f}'.format(h11ABS) + ' ' + '{:05.2f}'.format(h2ABS) + ' ' + '{:05.2f}'.format(t11) + ' ' + '{:05.2f}'.format(t2))
+        f1.write('\n')
+        f1.write(strftime("%Y-%m-%d %H:%M:%S", localtime()) + ' ' + '{:05.2f}'.format(h11) + ' ' +  '{:05.2f}'.format(h11ABS) + ' ' + '{:05.2f}'.format(h2ABS) + ' ' + '{:05.2f}'.format(t11) + ' ' + '{:05.2f}'.format(t2))
         if h11 > 90:
             if (h11ABS - h2ABS) > 1:
                 actua('ON')

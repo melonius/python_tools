@@ -51,6 +51,7 @@ from lagartoconfig import XmlLagarto
 #import MySQLdb
 from aDB import escribeEnBd
 #~ from actuaVenti import actuaVenti
+import actuaVenti
 #~ import conexionDB
 
 #~ from mysql.connector import errorcode
@@ -136,7 +137,10 @@ class SwapManager(SwapInterface, LagartoProcess):
             #__________________________________escribe en la base de datos
             escribeEnBd(endp.name, endp.getRegAddress(), strval, endp.valueChanged)
             #__________________________________aqui poner actua
-            #~ actuaVenti()
+            #~ print "\nPRU ", endp.getRegAddress(), endp.getRegId(), len(endp.parameters)
+            #~ if (endp.getRegAddress() == 11 or endp.getRegAddress() == 2) and endp.getRegId() == 12:
+            if (endp.id == '11.12.1' or endp.id == '2.12.1'):
+                actuaVenti.main()
 
 
             if self.lagarto_config.publish == "always" or (self.lagarto_config.publish == "event" and endp.valueChanged):

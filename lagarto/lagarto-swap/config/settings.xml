@@ -4,7 +4,10 @@
   <devices>
     <local>devices</local>
     <remote>https://raw.githubusercontent.com/panStamp/devices/master</remote>
-    <update>True</update>
+<!--
+      <update>True</update>
+-->
+      <update>False</update>
   </devices>
   <serial>serial.xml</serial>
   <network>network.xml</network>
